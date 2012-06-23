@@ -1,0 +1,3 @@
+- The goddamn bug with width 0 on the first element
+- fix images onload issue
+- hashtags changeable from the frontend
