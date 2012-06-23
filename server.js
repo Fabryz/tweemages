@@ -47,12 +47,10 @@ app.get('/uptime', function(req, res) {
 });
 
 app.get('/restart', function(req, res) {
-	console.log(" * Restarting in 5 seconds... * ");
+	console.log(" * Restarting in 5 seconds...");
 	setTimeout(function() {
 		if (stream != '') {
-			stream = '';
-			grabTwitterFeed();
-			console.log(" * Triggered restart * ");
+			restartTwitterFeed();
 		}
 		res.redirect('/');
 	}, 5000);
@@ -76,9 +74,8 @@ console.log("* Param: "+ configs.param +", value: "+ configs.value);
 
 streamInterval = setInterval(function() {
 	if (stream != '') {
-		stream = '';
-		grabTwitterFeed();
-		console.log(" * 5 mins passed, autorestarted. * ");
+		restartTwitterFeed();
+		console.log("* Stream autorestarted after 5 minutes");
 	}
 }, 300000); // 5 mins
 
@@ -121,6 +118,12 @@ function readConfigs() {
 function strencode(data) {
   return unescape(encodeURIComponent(JSON.stringify(data)));
 }
+
+function restartTwitterFeed() {
+	stream = '';
+	grabTwitterFeed();
+	console.log("* Stream restarted");
+}
 	
 // Using Twitter Streaming API
 function grabTwitterFeed() {
@@ -133,7 +136,7 @@ function grabTwitterFeed() {
 
 	stream.filter({ track: configs.value.split(",") }, function(feed) {
 
-		console.log("* Stream started * ");
+		console.log("* Stream started");
 
 		feed.on('tweet', function(tweet) {
 			io.sockets.emit("tweet", strencode(tweet));
@@ -146,7 +149,9 @@ function grabTwitterFeed() {
 		feed.on('error', function(err) {
 			console.log("Error: "+ err);
 			
-			fs.open(__dirname +'/errors.log', 'a', 666, function(e, id) {
+			fs.open(__dirname +'/errors.log', 'a', 0666, function(e, id) {
+				if (e) console.log("Error while opening: "+ e);
+
 				fs.write(id, new Date().toJSON() +" "+ err +"\n", null, 'utf8', function() {
 					fs.close(id);
 				});
@@ -184,6 +189,15 @@ io.sockets.on('connection', function(client) {
 	client.emit("clientId", { id: client.id });
 	client.emit("filters", { param: configs.param, value: configs.value });
 	io.sockets.emit("tot", { tot: totUsers });
+
+	client.on('search', function(data) {
+		configs.value = data.search;
+		console.log("> Received new search param: "+ data.search);
+
+		restartTwitterFeed();
+
+		io.sockets.emit("filters", { param: configs.param, value: configs.value });
+	});
 
 	client.on('disconnect', function() {
 		totUsers--;

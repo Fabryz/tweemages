@@ -14,27 +14,46 @@ $(document).ready(function() {
 	function init() {
 		Debug.log("Connecting...");
 
+		search.focus(function() {
+			isSearching = true;
+		});
+
+		search.blur(function() {
+			isSearching = false;
+		});
+
 		$(document).keyup(function(e) {
-			switch (e.keyCode) {
-				case 49: // 1
-						preferredSize = 3;
-					break;
-				case 50: // 2
-						preferredSize = 2;
-					break;
-				case 51: // 3
-						preferredSize = 1;
-					break;
-				case 52: // 4
-						preferredSize = 0;
-					break;
-				case 32: // space
-						tweets.empty();
-					break;
-				case 220: // backslash
-						Debug.toggle();
-					break;
+
+			if (!isSearching) {
+				switch (e.keyCode) {
+					case 49: // 1
+							preferredSize = 3;
+						break;
+					case 50: // 2
+							preferredSize = 2;
+						break;
+					case 51: // 3
+							preferredSize = 1;
+						break;
+					case 52: // 4
+							preferredSize = 0;
+						break;
+					case 32: // space
+							tweets.html('');
+						break;
+					case 220: // backslash
+							Debug.toggle();
+						break;
+				}
+			} else { // input field has the focus
+				switch (e.keyCode) {
+					case 13: // enter
+							socket.emit('search', { search: search.val() });
+							search.val('');
+						break;
+				}
 			}
+
 		});
 
 		tweets.imagesLoaded(function() {
@@ -66,11 +85,13 @@ $(document).ready(function() {
 	
 	var tweets = $("#tweets"),
 		defaultDebug = $("#stats"),
+		search = $("#search"),
 		speed = $("#speed"),
 		maxSpeed = $("#maxSpeed"),
 		maxPerSecondInterval = null,
 		tweetsAmount = 0,
 		maxTweetsAmount = 0,
+		isSearching = false,
 		sizes = [{
               "size": "large",
               "w": 700,
@@ -123,7 +144,7 @@ $(document).ready(function() {
 	socket.on('tweet', function(tweet) {	
 		tweet = strdecode(tweet);
 
-		if (tweet.entities.media) {
+		if ((tweet.entities) && (tweet.entities.media)) {
 			tweet.entities.media.forEach(function(image) {
 				var finalImage = $("<img />").attr({
 	            	src: image.media_url +':'+ sizes[preferredSize].size,
