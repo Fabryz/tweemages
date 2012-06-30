@@ -108,20 +108,12 @@ $(document).ready(function() {
 		isSearching = false,
 		sizes = [{
               "size": "large",
-              "w": 700,
-              "h": 466
             }, {
               "size": "medium",
-              "w": 600,
-              "h": 399
             }, {
               "size": "small",
-              "w": 340,
-              "h": 226
             }, {
               "size": "thumb",
-              "w": 150,
-              "h": 150
             }
           ];
 		preferredSize = 3,
