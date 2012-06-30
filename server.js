@@ -147,10 +147,12 @@ function grabTwitterFeed() {
 		});
 
 		feed.on('error', function(err) {
-			console.log("Error: "+ err);
+			// console.log("Error: "+ JSON.stringify(err));
 			
 			fs.open(__dirname +'/errors.log', 'a', 0666, function(e, id) {
-				if (e) console.log("Error while opening: "+ e);
+				if (e) {
+					console.log("Error while opening: "+ e);
+				}
 
 				fs.write(id, new Date().toJSON() +" "+ err +"\n", null, 'utf8', function() {
 					fs.close(id);

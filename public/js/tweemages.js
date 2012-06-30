@@ -28,21 +28,35 @@ $(document).ready(function() {
 				switch (e.keyCode) {
 					case 49: // 1
 							preferredSize = 3;
+							Debug.log("Switched to size: Thumb");
 						break;
 					case 50: // 2
 							preferredSize = 2;
+							Debug.log("Switched to size: Small");
 						break;
 					case 51: // 3
 							preferredSize = 1;
+							Debug.log("Switched to size: Medium");
 						break;
 					case 52: // 4
 							preferredSize = 0;
+							Debug.log("Switched to size: Large");
 						break;
 					case 32: // space
 							tweets.html('');
+							tweets.masonry('reload');
 						break;
 					case 220: // backslash
 							Debug.toggle();
+						break;
+					case 67: // c
+							if (holdit) {
+								holdit = false;
+								Debug.log("Continuing image rendering.");
+							} else {
+								holdit = true;
+								Debug.log("Pausing image rendering.");
+							}
 						break;
 				}
 			} else { // input field has the focus
@@ -110,7 +124,8 @@ $(document).ready(function() {
               "h": 150
             }
           ];
-		preferredSize = 3;
+		preferredSize = 3,
+		holdit = false;
 	
 	init();
 	calcMaxPerSecond();
@@ -141,37 +156,42 @@ $(document).ready(function() {
 	}
 
 	// https://dev.twitter.com/docs/tweet-entities
-	socket.on('tweet', function(tweet) {	
-		tweet = strdecode(tweet);
+	socket.on('tweet', function(tweet) {
+		if (!holdit) {	
+			tweet = strdecode(tweet);
 
-		if ((tweet.entities) && (tweet.entities.media)) {
-			tweet.entities.media.forEach(function(image) {
-				var finalImage = $("<img />").attr({
-	            	src: image.media_url +':'+ sizes[preferredSize].size,
-	            	alt: tweet.text,
-	            	onload: function () {
-	            				var anchor = $("<a />", {
-	            						href: image.media_url,
-	            						title: tweet.user.screen_name +': '+ tweet.text ,
-	            						target: '_blank'
-	            					});
+			if ((tweet.entities) && (tweet.entities.media)) {
+				tweet.entities.media.forEach(function(image) {
+					var size = sizes[preferredSize].size;
+					var finalImage = $("<img />").attr({
+						class: size,
+						style: 'width: '+ image.sizes[size].w +'px; height: '+ image.sizes[size].h +'px;',
+		            	src: image.media_url +':'+ sizes[preferredSize].size,
+		            	alt: tweet.text,
+		            	onload: function () {
+		            				var anchor = $("<a />", {
+		            						href: image.media_url,
+		            						title: tweet.user.screen_name +': '+ tweet.text ,
+		            						target: '_blank'
+		            					});
 
-	            				anchor.append($(this));
+		            				anchor.append($(this));
 
-	            				var span = $("<span />", {
-	            					class: "box",
-	            					width: sizes[preferredSize].w,
-	            					html: anchor
-	            				});
+		            				var span = $("<span />", {
+		            					class: "box",
+		            					width: sizes[preferredSize].w,
+		            					html: anchor
+		            				});
 
-	            				tweets.prepend(span).masonry('reload');
-	            			}
-	       		});
-			});
+		            				tweets.prepend(span).masonry('reload');
+		            			}
+		       		});
+				});
 
-			// Debug.log(tweet.entities.media.length +" images found");
-		} else {
-			// Debug.log("No image");
+				// Debug.log(tweet.entities.media.length +" images found");
+			} else {
+				// Debug.log("No image");
+			}
 		}
 
 		tweetsAmount++;
