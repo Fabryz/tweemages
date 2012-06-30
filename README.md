@@ -27,7 +27,7 @@ Installation
 3. Create ``/configs/twitter.json`` with your twitter application credentials
 4. Start the server with ``node server.js``
 5. Point your browser to ``YOUR_SERVER_IP:8080``
-6. Use 1, 2, 3, 4 to choose a different size. Use Space to clear the screen.
+6. Use 1, 2, 3, 4 to choose a different size. Use Space to clear the screen. Use C to pause/unpause the stream.
 
 Contributors
 ------------
