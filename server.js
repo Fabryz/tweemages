@@ -12,17 +12,17 @@ app.configure(function(){
     app.use(express.bodyParser());
     app.use(express.methodOverride());
     app.use(app.router);
-    app.use(express.static(__dirname + '/public'))
+    app.use(express.static(__dirname + '/public'));
     app.use(express.logger(':remote-addr - :method :url HTTP/:http-version :status :res[content-length] - :response-time ms'));
     app.use(express.favicon());
 });
 
 app.configure('development', function(){
-    app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
+    app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 app.configure('production', function(){
-    app.use(express.errorHandler()); 
+    app.use(express.errorHandler());
 });
 
 /*
@@ -49,7 +49,7 @@ app.get('/uptime', function(req, res) {
 app.get('/restart', function(req, res) {
 	console.log(" * Restarting in 5 seconds...");
 	setTimeout(function() {
-		if (stream != '') {
+		if (stream !== '') {
 			restartTwitterFeed();
 		}
 		res.redirect('/');
@@ -73,7 +73,7 @@ configs = readConfigs();
 console.log("* Param: "+ configs.param +", value: "+ configs.value);
 
 streamInterval = setInterval(function() {
-	if (stream != '') {
+	if (stream !== '') {
 		restartTwitterFeed();
 		console.log("* Stream autorestarted after 5 minutes");
 	}
@@ -86,7 +86,7 @@ streamInterval = setInterval(function() {
 // return require("./filename-with-no-extension"); could be used
 function readJSONFile(filename) {
 	var JSONFile = "";
-	
+
 	try {
 		JSONFile = JSON.parse(fs.readFileSync(__dirname +'/'+ filename, 'utf8'));
 	} catch(e) {
@@ -124,14 +124,14 @@ function restartTwitterFeed() {
 	grabTwitterFeed();
 	console.log("* Stream restarted");
 }
-	
+
 // Using Twitter Streaming API
 function grabTwitterFeed() {
 	stream = new Tuiter({
-	    "consumer_key" : configs.twitterApp.consumer_key
-	  , "consumer_secret" : configs.twitterApp.consumer_secret
-	  , "access_token_key" : configs.twitterApp.access_token_key
-	  , "access_token_secret" : configs.twitterApp.access_token_secret
+		"consumer_key" : configs.twitterApp.consumer_key,
+		"consumer_secret" : configs.twitterApp.consumer_secret,
+		"access_token_key" : configs.twitterApp.access_token_key,
+		"access_token_secret" : configs.twitterApp.access_token_secret
 	});
 
 	stream.filter({ track: configs.value.split(",") }, function(feed) {
@@ -146,18 +146,20 @@ function grabTwitterFeed() {
 			console.log("Deleted: "+ del);
 		});
 
-		feed.on('error', function(err) {
-			// console.log("Error: "+ JSON.stringify(err));
-			
-			fs.open(__dirname +'/errors.log', 'a', 0666, function(e, id) {
-				if (e) {
-					console.log("Error while opening: "+ e);
-				}
+		feed.on('error', function(stream_err) {
+			var line = "";
+			console.log("Stream ERR: "+ stream_err);
 
-				fs.write(id, new Date().toJSON() +" "+ err +"\n", null, 'utf8', function() {
-					fs.close(id);
+			line = new Date().toJSON() +" "+ stream_err;
+			fs.open(path.join(__dirname, 'errors.log'), 'a', 0666, function(err, fd) {
+				fs.write(fd, line, null, undefined, function (err, written) {
+					// console.log(written +"B written.");
+
+					fs.close(fd);
 				});
+
 			});
+
 		});
 	});
 }
@@ -168,23 +170,16 @@ function grabTwitterFeed() {
 
 var io = require('socket.io').listen(app);
 
-io.configure(function() { 
+io.configure(function() {
 	io.enable('browser client minification');
-	io.set('log level', 1); 
-	io.set('transports', [ 
-			'websocket',
-			'flashsocket',
-			'htmlfile',
-			'xhr-polling',
-			'jsonp-polling'
-	]);
+	io.set('log level', 1);
 });
 
 io.sockets.on('connection', function(client) {
 	totUsers++;
 	console.log('+ User '+ client.id +' connected, total users: '+ totUsers);
 
-	if ((totUsers > 0) && (stream == '')) {
+	if ((totUsers > 0) && (stream === '')) {
 		grabTwitterFeed();
 	}
 
@@ -205,7 +200,7 @@ io.sockets.on('connection', function(client) {
 		totUsers--;
 		console.log('- User '+ client.id +' disconnected, total users: '+ totUsers);
 
-		if (totUsers == 0) {
+		if (totUsers === 0) {
 			stream = '';
 		}
 
